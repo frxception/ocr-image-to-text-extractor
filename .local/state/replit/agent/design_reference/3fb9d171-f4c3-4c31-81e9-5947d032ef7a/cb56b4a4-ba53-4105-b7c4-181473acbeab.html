@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR Text Extractor - Extract Text from Images</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-slow': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="font-inter bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <!-- @COMPONENT: Header [navigation and theme toggle] -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-text-width text-white text-sm"></i>
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-900 dark:text-white">OCR Extract</h1>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Theme Toggle Button -->
+                    <button 
+                        id="theme-toggle" 
+                        class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+                        data-event="click:toggleTheme"
+                        data-implementation="Toggle between light and dark mode">
+                        <i class="fas fa-sun text-yellow-500 dark:hidden"></i>
+                        <i class="fas fa-moon text-blue-400 hidden dark:block"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: Header -->
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- @COMPONENT: Hero Section [main upload interface] -->
+        <section class="text-center mb-12">
+            <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Extract Text from Images
+            </h2>
+            <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                Upload any image and instantly extract all text, characters, and numbers using advanced OCR technology. 
+                Works with JPG, PNG, and WEBP formats.
+            </p>
+        </section>
+        <!-- @END_COMPONENT: Hero Section -->
+
+        <!-- @COMPONENT: Upload Area [drag and drop file upload] -->
+        <section class="mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-dashed border-gray-300 dark:border-gray-600 p-8 sm:p-12 text-center hover:border-primary-500 dark:hover:border-primary-400 transition-colors duration-300"
+                 id="upload-area"
+                 data-event="dragover:handleDragOver, drop:handleDrop, click:openFileDialog"
+                 data-implementation="Implement file drag-and-drop with Tesseract.js OCR processing">
+                
+                <div class="upload-content" id="upload-content">
+                    <div class="w-16 h-16 mx-auto mb-6 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
+                        <i class="fas fa-cloud-upload-alt text-2xl text-primary-500"></i>
+                    </div>
+                    
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Drop your image here
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-6">
+                        or click to browse files
+                    </p>
+                    
+                    <button class="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors duration-200">
+                        <i class="fas fa-folder-open mr-2"></i>
+                        Choose File
+                    </button>
+                    
+                    <div class="mt-6 text-sm text-gray-500 dark:text-gray-400">
+                        Supports JPG, PNG, WEBP • Max size: 10MB
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-content hidden" id="loading-content">
+                    <div class="w-16 h-16 mx-auto mb-6">
+                        <div class="animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-primary-500"></div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        Processing Image...
+                    </h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">
+                        Extracting text using OCR technology
+                    </p>
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div class="bg-primary-500 h-2 rounded-full transition-all duration-300" 
+                             style="width: 45%" 
+                             data-bind="processingProgress">
+                        </div>
+                    </div>
+                </div>
+
+                <input type="file" 
+                       id="file-input" 
+                       class="hidden" 
+                       accept="image/jpeg,image/jpg,image/png,image/webp"
+                       data-implementation="File input for image upload">
+            </div>
+        </section>
+        <!-- @END_COMPONENT: Upload Area -->
+
+        <!-- @COMPONENT: Results Section [extracted text display] -->
+        <section class="results-section hidden" id="results-section" data-mock="true">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                    <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-0">
+                        Extracted Text
+                    </h3>
+                    
+                    <div class="flex flex-wrap gap-3">
+                        <button class="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200"
+                                data-event="click:copyToClipboard"
+                                data-implementation="Copy extracted text to clipboard">
+                            <i class="fas fa-copy mr-2"></i>
+                            Copy Text
+                        </button>
+                        
+                        <button class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200"
+                                data-event="click:downloadText"
+                                data-implementation="Download extracted text as .txt file">
+                            <i class="fas fa-download mr-2"></i>
+                            Download
+                        </button>
+                        
+                        <button class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200"
+                                data-event="click:clearResults"
+                                data-implementation="Clear results and reset upload area">
+                            <i class="fas fa-trash mr-2"></i>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Original Image Preview -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-3">Original Image</h4>
+                    <div class="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
+                        <!-- Sample uploaded image preview -->
+                        <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                             alt="Uploaded document or text image" 
+                             class="max-w-full h-auto rounded-lg shadow-md"
+                             data-bind="uploadedImage.src"
+                             data-mock-image="true"
+                             data-implementation="Display uploaded image preview">
+                    </div>
+                </div>
+
+                <!-- Extracted Text Results -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-lg font-medium text-gray-900 dark:text-white">Extracted Text</h4>
+                        <span class="text-sm text-gray-500 dark:text-gray-400" data-bind="extractedText.length" data-mock="true">
+                            1,247 characters
+                        </span>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
+                        <div class="text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap font-mono text-sm"
+                             data-bind="extractedText"
+                             data-mock="true">
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+
+INVOICE #12345
+Date: March 15, 2024
+Amount: $1,234.56
+
+Customer Information:
+Name: John Smith
+Address: 123 Main Street
+City: Anytown, ST 12345
+Phone: (555) 123-4567
+
+Product Details:
+- Item A: $500.00
+- Item B: $734.56
+Total: $1,234.56
+
+Thank you for your business!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Statistics -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4" data-mock="true">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" data-bind="stats.characters">1,247</div>
+                        <div class="text-sm text-blue-700 dark:text-blue-300">Characters</div>
+                    </div>
+                    
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-400" data-bind="stats.words">187</div>
+                        <div class="text-sm text-green-700 dark:text-green-300">Words</div>
+                    </div>
+                    
+                    <div class="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" data-bind="stats.lines">12</div>
+                        <div class="text-sm text-purple-700 dark:text-purple-300">Lines</div>
+                    </div>
+                    
+                    <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-orange-600 dark:text-orange-400" data-bind="stats.confidence">94%</div>
+                        <div class="text-sm text-orange-700 dark:text-orange-300">Confidence</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- @END_COMPONENT: Results Section -->
+
+        <!-- @COMPONENT: Error Message [error handling display] -->
+        <section class="error-section hidden" id="error-section">
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-center">
+                <div class="w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
+                    Processing Error
+                </h3>
+                <p class="text-red-600 dark:text-red-300 mb-4" id="error-message">
+                    Failed to extract text from the image. Please try again with a different image.
+                </p>
+                <button class="inline-flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200"
+                        data-event="click:dismissError"
+                        data-implementation="Hide error message and reset upload area">
+                    <i class="fas fa-times mr-2"></i>
+                    Dismiss
+                </button>
+            </div>
+        </section>
+        <!-- @END_COMPONENT: Error Message -->
+
+        <!-- @COMPONENT: Features Section [app capabilities showcase] -->
+        <section class="mt-16">
+            <div class="text-center mb-12">
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    Powerful OCR Features
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                    Advanced text extraction capabilities designed for accuracy and ease of use
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-eye text-blue-500 text-xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        High Accuracy
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Advanced OCR technology with 95%+ accuracy for clear text recognition
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-file-image text-green-500 text-xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Multiple Formats
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Support for JPG, PNG, and WEBP image formats up to 10MB
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-mobile-alt text-purple-500 text-xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Mobile Optimized
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Responsive design that works perfectly on all devices and screen sizes
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-yellow-500 text-xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Privacy First
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Client-side processing means your images never leave your device
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-red-100 dark:bg-red-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-copy text-red-500 text-xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Easy Export
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Copy to clipboard or download extracted text as a .txt file
+                    </p>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-tachometer-alt text-indigo-500 text-xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                        Fast Processing
+                    </h4>
+                    <p class="text-gray-600 dark:text-gray-400">
+                        Quick text extraction with real-time progress indicators
+                    </p>
+                </div>
+            </div>
+        </section>
+        <!-- @END_COMPONENT: Features Section -->
+    </main>
+
+    <!-- @COMPONENT: Footer [app information and links] -->
+    <footer class="mt-20 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-3 mb-4">
+                    <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-text-width text-white text-sm"></i>
+                    </div>
+                    <span class="text-lg font-semibold text-gray-900 dark:text-white">OCR Extract</span>
+                </div>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">
+                    Powerful, privacy-first OCR text extraction tool
+                </p>
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    © 2024 OCR Extract. Built with Tesseract.js and modern web technologies.
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- @END_COMPONENT: Footer -->
+
+    <!-- @STATE: darkMode:boolean = false -->
+    <!-- @STATE: isProcessing:boolean = false -->
+    <!-- @STATE: extractedText:string = "" -->
+    <!-- @STATE: uploadedImage:File = null -->
+    <!-- @STATE: processingProgress:number = 0 -->
+
+    <script>
+        // TODO: Implement Tesseract.js OCR processing
+        // TODO: Implement file validation and size limits
+        // TODO: Implement drag-and-drop functionality
+        // TODO: Implement copy-to-clipboard and download features
+        // TODO: Implement proper error handling
+
+        (function() {
+            // Theme Management
+            const themeToggle = document.getElementById('theme-toggle');
+            const html = document.documentElement;
+            
+            // Check for saved theme preference or default to light mode
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            html.classList.toggle('dark', currentTheme === 'dark');
+            
+            themeToggle.addEventListener('click', function() {
+                html.classList.toggle('dark');
+                const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
+                localStorage.setItem('theme', newTheme);
+            });
+
+            // File Upload UI Management
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const uploadContent = document.getElementById('upload-content');
+            const loadingContent = document.getElementById('loading-content');
+            const resultsSection = document.getElementById('results-section');
+            const errorSection = document.getElementById('error-section');
+
+            // Drag and drop visual feedback
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20');
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20');
+                // TODO: Handle dropped files
+            });
+
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    // TODO: Process selected file
+                }
+            });
+
+            // Demo functionality - Show results after 3 seconds
+            // Remove this in production and implement actual OCR processing
+            window.demoProcessing = function() {
+                uploadContent.classList.add('hidden');
+                loadingContent.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    loadingContent.classList.add('hidden');
+                    resultsSection.classList.remove('hidden');
+                    uploadContent.classList.remove('hidden');
+                }, 3000);
+            };
+
+        })();
+    </script>
+</body>
+</html>
