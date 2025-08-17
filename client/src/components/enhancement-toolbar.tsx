@@ -15,31 +15,31 @@ interface EnhancementToolbarProps {
   onCharacterFocusChange: (focus: CharacterFocus) => void;
 }
 
-export default function EnhancementToolbar({ 
-  enhancementLevel, 
+export default function EnhancementToolbar({
+  enhancementLevel,
   onEnhancementLevelChange,
   characterFocus,
-  onCharacterFocusChange 
+  onCharacterFocusChange,
 }: EnhancementToolbarProps) {
   const enhancementOptions = [
-    { value: 'none', label: 'None', description: 'Original image' },
-    { value: 'light', label: 'Light', description: 'Minimal enhancement' },
-    { value: 'medium', label: 'Medium', description: 'Balanced enhancement' },
-    { value: 'strong', label: 'Strong', description: 'Maximum enhancement' }
+    { value: "none", label: "None", description: "Original image" },
+    { value: "light", label: "Light", description: "Minimal enhancement" },
+    { value: "medium", label: "Medium", description: "Balanced enhancement" },
+    { value: "strong", label: "Strong", description: "Maximum enhancement" },
   ] as const;
 
   const characterFocusOptions = [
-    { value: 'all', label: 'All Characters', description: 'Numbers, letters, and symbols' },
-    { value: 'alphanumeric', label: 'Alphanumeric Only', description: 'Letters and numbers only' },
-    { value: 'numbers', label: 'Numbers Only', description: 'Numeric characters only' }
+    { value: "all", label: "All Characters", description: "Numbers, letters, and symbols" },
+    { value: "alphanumeric", label: "Alphanumeric Only", description: "Letters and numbers only" },
+    { value: "numbers", label: "Numbers Only", description: "Numeric characters only" },
   ] as const;
 
   const getCurrentEnhancementOption = () => {
-    return enhancementOptions.find(option => option.value === enhancementLevel);
+    return enhancementOptions.find((option) => option.value === enhancementLevel);
   };
 
   const getCurrentFocusOption = () => {
-    return characterFocusOptions.find(option => option.value === characterFocus);
+    return characterFocusOptions.find((option) => option.value === characterFocus);
   };
 
   return (

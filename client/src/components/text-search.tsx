@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { Search, X, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 interface TextSearchProps {
   text: string;
@@ -13,16 +13,16 @@ export default function TextSearch({ text, onHighlight }: TextSearchProps) {
 
   const searchResults = useMemo(() => {
     if (!searchTerm.trim() || !text) return { matches: [], count: 0 };
-    
-    const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+
+    const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
     const matches = Array.from(text.matchAll(regex));
-    
+
     return {
-      matches: matches.map(match => ({
+      matches: matches.map((match) => ({
         index: match.index || 0,
-        text: match[0]
+        text: match[0],
       })),
-      count: matches.length
+      count: matches.length,
     };
   }, [searchTerm, text]);
 
@@ -31,13 +31,13 @@ export default function TextSearch({ text, onHighlight }: TextSearchProps) {
       return text;
     }
 
-    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
     let highlightIndex = 0;
-    
+
     const highlighted = text.replace(regex, (match) => {
       const isCurrent = highlightIndex === currentMatch;
       highlightIndex++;
-      return `<mark class="${isCurrent ? 'bg-yellow-400 dark:bg-yellow-600' : 'bg-yellow-200 dark:bg-yellow-800'} px-1 rounded">${match}</mark>`;
+      return `<mark class="${isCurrent ? "bg-yellow-400 dark:bg-yellow-600" : "bg-yellow-200 dark:bg-yellow-800"} px-1 rounded">${match}</mark>`;
     });
 
     return highlighted;
@@ -74,7 +74,7 @@ export default function TextSearch({ text, onHighlight }: TextSearchProps) {
       {/* Search Toggle Button */}
       <button
         onClick={() => setIsVisible(!isVisible)}
-        className="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200"
+        className="inline-flex items-center px-3 py-2.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200"
         title="Search in text"
       >
         <Search className="w-4 h-4 mr-1" />
@@ -83,7 +83,7 @@ export default function TextSearch({ text, onHighlight }: TextSearchProps) {
 
       {/* Search Panel */}
       {isVisible && (
-        <div className="absolute top-10 right-0 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 min-w-80">
+        <div className="absolute top-12  z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3 min-w-80">
           <div className="flex items-center space-x-2 mb-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -108,12 +108,11 @@ export default function TextSearch({ text, onHighlight }: TextSearchProps) {
           {searchTerm && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
-                {searchResults.count > 0 
+                {searchResults.count > 0
                   ? `${currentMatch + 1} of ${searchResults.count} matches`
-                  : 'No matches found'
-                }
+                  : "No matches found"}
               </span>
-              
+
               {searchResults.count > 0 && (
                 <div className="flex items-center space-x-1">
                   <button

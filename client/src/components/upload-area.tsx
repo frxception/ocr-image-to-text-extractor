@@ -1,6 +1,15 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { CloudUpload, FolderOpen, X, Loader2, CheckCircle, AlertCircle, Crop, Check } from "lucide-react";
+import {
+  CloudUpload,
+  FolderOpen,
+  X,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  Crop,
+  Check,
+} from "lucide-react";
 import { useOCR } from "@/hooks/use-ocr";
 import { OCRResult, ImageEnhancementLevel, CharacterFocus } from "@/pages/home";
 import ImageViewer from "@/components/image-viewer";
@@ -19,75 +28,86 @@ interface UploadAreaProps {
   characterFocus: CharacterFocus;
 }
 
-export default function UploadArea({ 
+export default function UploadArea({
   uploadedImage,
-  onImageUploaded, 
+  onImageUploaded,
   onProcessedImage,
-  onOCRResult, 
-  onProcessingChange, 
+  onOCRResult,
+  onProcessingChange,
   onError,
   onClear,
   isProcessing,
   enhancementLevel,
-  characterFocus
+  characterFocus,
 }: UploadAreaProps) {
   const [progress, setProgress] = useState(0);
-  const [processingStage, setProcessingStage] = useState<string>('');
+  const [processingStage, setProcessingStage] = useState<string>("");
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [cropPreviewUrl, setCropPreviewUrl] = useState<string | null>(null);
   const { extractText } = useOCR();
 
-  const processImage = useCallback(async (file: File) => {
-    try {
-      onProcessingChange(true);
-      setProgress(0);
+  const processImage = useCallback(
+    async (file: File) => {
+      try {
+        onProcessingChange(true);
+        setProgress(0);
 
-      // Create image URL for preview
-      const imageUrl = URL.createObjectURL(file);
-      onImageUploaded(imageUrl);
+        // Create image URL for preview
+        const imageUrl = URL.createObjectURL(file);
+        onImageUploaded(imageUrl);
 
-      // Extract text using OCR
-      const { result, processedImageUrl } = await extractText(file, enhancementLevel, characterFocus, (progress, stage) => {
-        setProgress(progress * 100);
-        setProcessingStage(stage || 'Processing...');
-      });
+        // Extract text using OCR
+        const { result, processedImageUrl } = await extractText(
+          file,
+          enhancementLevel,
+          characterFocus,
+          (progress, stage) => {
+            setProgress(progress * 100);
+            setProcessingStage(stage || "Processing...");
+          }
+        );
 
-      onProcessedImage(processedImageUrl);
+        onProcessedImage(processedImageUrl);
 
-      onOCRResult(result);
-    } catch (error) {
-      onError(error instanceof Error ? error.message : "Failed to process image");
-    } finally {
-      onProcessingChange(false);
-      setProgress(0);
-      setProcessingStage('');
-    }
-  }, [extractText, onImageUploaded, onOCRResult, onProcessingChange, onError, enhancementLevel]);
+        onOCRResult(result);
+      } catch (error) {
+        onError(error instanceof Error ? error.message : "Failed to process image");
+      } finally {
+        onProcessingChange(false);
+        setProgress(0);
+        setProcessingStage("");
+      }
+    },
+    [extractText, onImageUploaded, onOCRResult, onProcessingChange, onError, enhancementLevel]
+  );
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    
-    if (!file) return;
+  const onDrop = useCallback(
+    async (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0];
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      onError("File size must be less than 10MB");
-      return;
-    }
+      if (!file) return;
 
-    // Validate file type
-    if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
-      onError("Please upload a valid image file (JPG, PNG, or WEBP)");
-      return;
-    }
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        onError("File size must be less than 10MB");
+        return;
+      }
 
-    // Show crop dialog
-    const previewUrl = URL.createObjectURL(file);
-    setPendingFile(file);
-    setCropPreviewUrl(previewUrl);
-    setShowCropDialog(true);
-  }, [onError]);
+      // Validate file type
+      if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+        onError("Please upload a valid image file (JPG, PNG, or WEBP)");
+        return;
+      }
+
+      // Show crop dialog
+      const previewUrl = URL.createObjectURL(file);
+      setPendingFile(file);
+      setCropPreviewUrl(previewUrl);
+      setShowCropDialog(true);
+    },
+    [onError]
+  );
 
   const handleSkipCrop = useCallback(() => {
     if (pendingFile) {
@@ -98,21 +118,26 @@ export default function UploadArea({
     }
   }, [pendingFile, processImage]);
 
-  const handleCropImage = useCallback(async (croppedImageBlob: Blob) => {
-    try {
-      // Convert blob to file
-      const croppedFile = new File([croppedImageBlob], 'cropped-image.png', { type: 'image/png' });
-      
-      setShowCropDialog(false);
-      setPendingFile(null);
-      setCropPreviewUrl(null);
-      
-      // Process the cropped image
-      await processImage(croppedFile);
-    } catch (error) {
-      onError("Failed to process cropped image");
-    }
-  }, [processImage, onError]);
+  const handleCropImage = useCallback(
+    async (croppedImageBlob: Blob) => {
+      try {
+        // Convert blob to file
+        const croppedFile = new File([croppedImageBlob], "cropped-image.png", {
+          type: "image/png",
+        });
+
+        setShowCropDialog(false);
+        setPendingFile(null);
+        setCropPreviewUrl(null);
+
+        // Process the cropped image
+        await processImage(croppedFile);
+      } catch (error) {
+        onError("Failed to process cropped image");
+      }
+    },
+    [processImage, onError]
+  );
 
   const handleCancelCrop = useCallback(() => {
     setShowCropDialog(false);
@@ -126,24 +151,25 @@ export default function UploadArea({
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
+      "image/*": [".jpeg", ".jpg", ".png", ".webp"],
     },
-    multiple: false
+    multiple: false,
   });
 
   return (
     <section className="mb-8">
-      <div 
+      <div
         {...getRootProps()}
         className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-300 cursor-pointer
-          ${isDragActive 
-            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' 
-            : 'border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-400'
+          ${
+            isDragActive
+              ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
+              : "border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-400"
           }
         `}
       >
         <input {...getInputProps()} />
-        
+
         {uploadedImage && !isProcessing ? (
           // Show uploaded image with delete button
           <div className="relative">
@@ -158,9 +184,9 @@ export default function UploadArea({
               <X className="w-4 h-4" />
             </button>
             <div className="mb-4">
-              <img 
-                src={uploadedImage} 
-                alt="Uploaded image" 
+              <img
+                src={uploadedImage}
+                alt="Uploaded image"
                 className="max-w-full h-auto rounded-lg shadow-md max-h-64 mx-auto"
               />
             </div>
@@ -176,10 +202,7 @@ export default function UploadArea({
           <UploadAnimation />
         ) : (
           // Show processing state with animated loading
-          <ProcessingAnimation
-            stage={processingStage || 'processing image'}
-            progress={progress}
-          />
+          <ProcessingAnimation stage={processingStage || "processing image"} progress={progress} />
         )}
       </div>
 
@@ -195,7 +218,7 @@ export default function UploadArea({
                 Crop the image to focus on specific text areas, or skip to process the entire image.
               </p>
             </div>
-            
+
             <div className="p-6">
               <div className="mb-6">
                 <ImageViewer
@@ -205,7 +228,7 @@ export default function UploadArea({
                   onCrop={handleCropImage}
                 />
               </div>
-              
+
               <div className="flex flex-col sm:flex-row gap-3 justify-end">
                 <button
                   onClick={handleCancelCrop}
@@ -224,7 +247,9 @@ export default function UploadArea({
                 <button
                   onClick={() => {
                     // Instructions for crop tool
-                    alert("Click the crop tool (scissors icon) in the image viewer, then drag to select the area you want to extract text from.");
+                    alert(
+                      "Click the crop tool (scissors icon) in the image viewer, then drag to select the area you want to extract text from."
+                    );
                   }}
                   className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors duration-200"
                 >

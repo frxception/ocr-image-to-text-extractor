@@ -12,7 +12,7 @@ export interface SavedTextEntry {
   title?: string;
 }
 
-const STORAGE_KEY = 'ocr_saved_texts';
+const STORAGE_KEY = "ocr_saved_texts";
 
 export function useSavedText() {
   const [savedTexts, setSavedTexts] = useState<SavedTextEntry[]>([]);
@@ -26,12 +26,12 @@ export function useSavedText() {
         // Convert timestamp strings back to Date objects
         const withDates = parsed.map((entry: any) => ({
           ...entry,
-          timestamp: new Date(entry.timestamp)
+          timestamp: new Date(entry.timestamp),
         }));
         setSavedTexts(withDates);
       }
     } catch (error) {
-      console.error('Failed to load saved texts:', error);
+      console.error("Failed to load saved texts:", error);
     }
   }, []);
 
@@ -40,7 +40,7 @@ export function useSavedText() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(savedTexts));
     } catch (error) {
-      console.error('Failed to save texts to localStorage:', error);
+      console.error("Failed to save texts to localStorage:", error);
     }
   }, [savedTexts]);
 
@@ -53,15 +53,15 @@ export function useSavedText() {
       characters: result.characters,
       lines: result.lines,
       timestamp: new Date(),
-      title: title || `Text extraction ${new Date().toLocaleString()}`
+      title: title || `Text extraction ${new Date().toLocaleString()}`,
     };
 
-    setSavedTexts(prev => [newEntry, ...prev]);
+    setSavedTexts((prev) => [newEntry, ...prev]);
     return newEntry.id;
   }, []);
 
   const deleteText = useCallback((id: string) => {
-    setSavedTexts(prev => prev.filter(entry => entry.id !== id));
+    setSavedTexts((prev) => prev.filter((entry) => entry.id !== id));
   }, []);
 
   const clearAll = useCallback(() => {
@@ -69,26 +69,24 @@ export function useSavedText() {
   }, []);
 
   const updateTitle = useCallback((id: string, title: string) => {
-    setSavedTexts(prev => prev.map(entry => 
-      entry.id === id ? { ...entry, title } : entry
-    ));
+    setSavedTexts((prev) => prev.map((entry) => (entry.id === id ? { ...entry, title } : entry)));
   }, []);
 
   const exportTexts = useCallback(() => {
     const exportData = {
       exportDate: new Date().toISOString(),
       totalEntries: savedTexts.length,
-      entries: savedTexts
+      entries: savedTexts,
     };
-    
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { 
-      type: 'application/json' 
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
     });
-    
+
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `ocr-extracted-texts-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `ocr-extracted-texts-${new Date().toISOString().split("T")[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -102,6 +100,6 @@ export function useSavedText() {
     clearAll,
     updateTitle,
     exportTexts,
-    count: savedTexts.length
+    count: savedTexts.length,
   };
 }

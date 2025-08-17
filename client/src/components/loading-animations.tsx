@@ -19,38 +19,38 @@ const PROCESSING_STAGES: Record<string, ProcessingStage> = {
     icon: <Loader2 className="w-8 h-8 animate-spin" />,
     label: "Initializing",
     description: "Setting up OCR engine...",
-    color: "text-blue-500"
+    color: "text-blue-500",
   },
   "loading language traineddata": {
     icon: <Brain className="w-8 h-8 animate-pulse" />,
     label: "Loading AI Model",
     description: "Downloading language data...",
-    color: "text-purple-500"
+    color: "text-purple-500",
   },
   "initializing api": {
     icon: <Zap className="w-8 h-8 animate-bounce" />,
     label: "Preparing",
     description: "Initializing text recognition...",
-    color: "text-yellow-500"
+    color: "text-yellow-500",
   },
   "recognizing text": {
     icon: <ImageIcon className="w-8 h-8 animate-pulse" />,
     label: "Analyzing Image",
     description: "Extracting text from image...",
-    color: "text-green-500"
+    color: "text-green-500",
   },
   "processing image": {
     icon: <ImageIcon className="w-8 h-8 animate-pulse" />,
     label: "Processing",
     description: "Enhancing image quality...",
-    color: "text-indigo-500"
+    color: "text-indigo-500",
   },
-  "default": {
+  default: {
     icon: <Loader2 className="w-8 h-8 animate-spin" />,
     label: "Processing",
     description: "Working on your image...",
-    color: "text-gray-500"
-  }
+    color: "text-gray-500",
+  },
 };
 
 export function ProcessingAnimation({ stage, progress, className = "" }: LoadingAnimationProps) {
@@ -59,7 +59,7 @@ export function ProcessingAnimation({ stage, progress, className = "" }: Loading
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setAnimationPhase(prev => (prev + 1) % 4);
+      setAnimationPhase((prev) => (prev + 1) % 4);
     }, 500);
     return () => clearInterval(interval);
   }, []);
@@ -70,18 +70,19 @@ export function ProcessingAnimation({ stage, progress, className = "" }: Loading
     <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
       {/* Animated Icon with Glow Effect */}
       <div className="relative mb-6">
-        <div className={`absolute inset-0 rounded-full blur-xl opacity-30 ${currentStage.color.replace('text-', 'bg-')}`} 
-             style={{ animation: 'pulse 2s ease-in-out infinite' }} />
-        <div className={`relative ${currentStage.color}`}>
-          {currentStage.icon}
-        </div>
+        <div
+          className={`absolute inset-0 rounded-full blur-xl opacity-30 ${currentStage.color.replace("text-", "bg-")}`}
+          style={{ animation: "pulse 2s ease-in-out infinite" }}
+        />
+        <div className={`relative ${currentStage.color}`}>{currentStage.icon}</div>
       </div>
 
       {/* Stage Information */}
       <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-        {currentStage.label}{dots}
+        {currentStage.label}
+        {dots}
       </h3>
-      
+
       <p className="text-gray-600 dark:text-gray-400 mb-6 text-center max-w-sm">
         {currentStage.description}
       </p>
@@ -89,26 +90,26 @@ export function ProcessingAnimation({ stage, progress, className = "" }: Loading
       {/* Enhanced Progress Bar */}
       <div className="w-full max-w-md mb-4">
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-          <div 
-            className={`h-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden ${currentStage.color.replace('text-', 'bg-')}`}
+          <div
+            className={`h-3 rounded-full transition-all duration-500 ease-out relative overflow-hidden ${currentStage.color.replace("text-", "bg-")}`}
             style={{ width: `${progress}%` }}
           >
             {/* Shimmer effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"
-                 style={{ 
-                   backgroundSize: '200% 100%',
-                   animation: 'shimmer 2s ease-in-out infinite'
-                 }} />
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"
+              style={{
+                backgroundSize: "200% 100%",
+                animation: "shimmer 2s ease-in-out infinite",
+              }}
+            />
           </div>
         </div>
-        
+
         <div className="flex justify-between items-center mt-2">
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {Math.round(progress)}% complete
           </span>
-          {progress > 95 && (
-            <CheckCircle className="w-4 h-4 text-green-500 animate-bounce" />
-          )}
+          {progress > 95 && <CheckCircle className="w-4 h-4 text-green-500 animate-bounce" />}
         </div>
       </div>
 
@@ -117,10 +118,10 @@ export function ProcessingAnimation({ stage, progress, className = "" }: Loading
         {[...Array(5)].map((_, i) => (
           <div
             key={i}
-            className={`absolute w-2 h-2 ${currentStage.color.replace('text-', 'bg-')} rounded-full opacity-60`}
+            className={`absolute w-2 h-2 ${currentStage.color.replace("text-", "bg-")} rounded-full opacity-60`}
             style={{
               left: `${10 + i * 20}%`,
-              animation: `float 3s ease-in-out infinite ${i * 0.5}s`
+              animation: `float 3s ease-in-out infinite ${i * 0.5}s`,
             }}
           />
         ))}
@@ -138,15 +139,15 @@ export function CropProcessingAnimation({ className = "" }: { className?: string
           <ImageIcon className="w-8 h-8 text-orange-500 animate-pulse" />
         </div>
       </div>
-      
+
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
         Processing Crop...
       </h3>
-      
+
       <p className="text-gray-600 dark:text-gray-400 text-center">
         Analyzing cropped area for text
       </p>
-      
+
       <div className="mt-4 flex space-x-1">
         {[...Array(3)].map((_, i) => (
           <div
@@ -165,7 +166,7 @@ export function UploadAnimation({ className = "" }: { className?: string }) {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setPulsePhase(prev => (prev + 1) % 3);
+      setPulsePhase((prev) => (prev + 1) % 3);
     }, 800);
     return () => clearInterval(interval);
   }, []);
@@ -183,12 +184,10 @@ export function UploadAnimation({ className = "" }: { className?: string }) {
       <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
         Drop your image here
       </h3>
-      
-      <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
-        or click to browse files
-      </p>
 
-      <button 
+      <p className="text-gray-600 dark:text-gray-400 text-center mb-6">or click to browse files</p>
+
+      <button
         type="button"
         className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors duration-200 cursor-pointer"
       >
@@ -206,7 +205,7 @@ export function UploadAnimation({ className = "" }: { className?: string }) {
           <div
             key={i}
             className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              pulsePhase === i ? 'bg-primary-500 scale-125' : 'bg-gray-300 dark:bg-gray-600'
+              pulsePhase === i ? "bg-primary-500 scale-125" : "bg-gray-300 dark:bg-gray-600"
             }`}
           />
         ))}

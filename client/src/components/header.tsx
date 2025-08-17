@@ -18,9 +18,9 @@ export default function Header() {
             </div>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">OCR Extract</h1>
           </div>
-          
+
           <div className="flex items-center space-x-4">
-            <button 
+            <button
               onClick={toggleTheme}
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
             >

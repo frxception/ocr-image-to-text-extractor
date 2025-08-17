@@ -13,8 +13,8 @@ export interface OCRResult {
   lines: number;
 }
 
-export type ImageEnhancementLevel = 'none' | 'light' | 'medium' | 'strong';
-export type CharacterFocus = 'all' | 'alphanumeric' | 'numbers';
+export type ImageEnhancementLevel = "none" | "light" | "medium" | "strong";
+export type CharacterFocus = "all" | "alphanumeric" | "numbers";
 
 export default function Home() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -22,8 +22,8 @@ export default function Home() {
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [enhancementLevel, setEnhancementLevel] = useState<ImageEnhancementLevel>('medium');
-  const [characterFocus, setCharacterFocus] = useState<CharacterFocus>('all');
+  const [enhancementLevel, setEnhancementLevel] = useState<ImageEnhancementLevel>("medium");
+  const [characterFocus, setCharacterFocus] = useState<CharacterFocus>("all");
 
   const handleClear = () => {
     setUploadedImage(null);
@@ -35,7 +35,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       <Header />
-      
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
         <section className="text-center mb-12">
@@ -43,14 +43,14 @@ export default function Home() {
             Extract Text from Images
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Upload any image and instantly extract all text, characters, and numbers using advanced OCR technology. 
-            Works with JPG, PNG, and WEBP formats.
+            Upload any image and instantly extract all text, characters, and numbers using advanced
+            OCR technology. Works with JPG, PNG, and WEBP formats.
           </p>
         </section>
 
         {/* Enhancement Toolbar */}
         <section className="mb-8">
-          <EnhancementToolbar 
+          <EnhancementToolbar
             enhancementLevel={enhancementLevel}
             onEnhancementLevelChange={setEnhancementLevel}
             characterFocus={characterFocus}
@@ -59,7 +59,7 @@ export default function Home() {
         </section>
 
         {/* Upload Area */}
-        <UploadArea 
+        <UploadArea
           uploadedImage={uploadedImage}
           onImageUploaded={setUploadedImage}
           onProcessedImage={setProcessedImage}
@@ -82,10 +82,8 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
                 Processing Error
               </h3>
-              <p className="text-red-600 dark:text-red-300 mb-4">
-                {error}
-              </p>
-              <button 
+              <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
+              <button
                 onClick={() => setError(null)}
                 className="inline-flex items-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200"
               >
@@ -98,7 +96,7 @@ export default function Home() {
 
         {/* Results Section */}
         {ocrResult && uploadedImage && (
-          <ResultsSection 
+          <ResultsSection
             result={ocrResult}
             originalImageUrl={uploadedImage}
             processedImageUrl={processedImage}
@@ -121,7 +119,9 @@ export default function Home() {
               <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
                 <i className="fas fa-text-width text-white text-sm"></i>
               </div>
-              <span className="text-lg font-semibold text-gray-900 dark:text-white">OCR Extract</span>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                OCR Extract
+              </span>
             </div>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Powerful, privacy-first OCR text extraction tool
