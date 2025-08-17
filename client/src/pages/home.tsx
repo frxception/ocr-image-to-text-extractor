@@ -3,7 +3,8 @@ import UploadArea from "@/components/upload-area";
 import ResultsSection from "@/components/results-section";
 import FeaturesSection from "@/components/features-section";
 import EnhancementToolbar from "@/components/enhancement-toolbar";
-import { useState } from "react";
+import { useOCR } from "@/hooks/use-ocr";
+import { useState, useEffect, useRef } from "react";
 
 export interface OCRResult {
   text: string;
@@ -24,12 +25,79 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [enhancementLevel, setEnhancementLevel] = useState<ImageEnhancementLevel>("medium");
   const [characterFocus, setCharacterFocus] = useState<CharacterFocus>("all");
+  const [originalImageFile, setOriginalImageFile] = useState<File | null>(null);
+  const [isReprocessing, setIsReprocessing] = useState(false);
+  
+  // Refs to track initial settings and avoid re-processing on mount
+  const initialRender = useRef(true);
+  const lastEnhancementLevel = useRef<ImageEnhancementLevel>("medium");
+  const lastCharacterFocus = useRef<CharacterFocus>("all");
+  
+  const { extractText } = useOCR();
 
   const handleClear = () => {
     setUploadedImage(null);
     setProcessedImage(null);
     setOcrResult(null);
     setError(null);
+    setOriginalImageFile(null);
+    setIsReprocessing(false);
+  };
+
+  const reprocessImage = async () => {
+    if (!originalImageFile || isProcessing || isReprocessing) return;
+
+    try {
+      setIsReprocessing(true);
+      setError(null);
+
+      const { result, processedImageUrl } = await extractText(
+        originalImageFile,
+        enhancementLevel,
+        characterFocus,
+        () => {} // No progress callback needed for reprocessing
+      );
+
+      setProcessedImage(processedImageUrl);
+      setOcrResult(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reprocess image");
+    } finally {
+      setIsReprocessing(false);
+    }
+  };
+
+  // Auto-reprocess when enhancement settings change (but only after initial extraction)
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      lastEnhancementLevel.current = enhancementLevel;
+      lastCharacterFocus.current = characterFocus;
+      return;
+    }
+
+    // Only reprocess if we have an original file and OCR results, and settings actually changed
+    if (
+      originalImageFile &&
+      ocrResult &&
+      (lastEnhancementLevel.current !== enhancementLevel || lastCharacterFocus.current !== characterFocus)
+    ) {
+      lastEnhancementLevel.current = enhancementLevel;
+      lastCharacterFocus.current = characterFocus;
+      reprocessImage();
+    }
+  }, [enhancementLevel, characterFocus, originalImageFile, ocrResult]);
+
+  const handleImageUploaded = (imageUrl: string) => {
+    setUploadedImage(imageUrl);
+  };
+
+  const handleOCRResult = (result: OCRResult) => {
+    setOcrResult(result);
+  };
+
+  const handleImageFileStored = (file: File) => {
+    setOriginalImageFile(file);
   };
 
   return (
@@ -55,21 +123,25 @@ export default function Home() {
             onEnhancementLevelChange={setEnhancementLevel}
             characterFocus={characterFocus}
             onCharacterFocusChange={setCharacterFocus}
+            isReprocessing={isReprocessing}
           />
         </section>
 
         {/* Upload Area */}
         <UploadArea
           uploadedImage={uploadedImage}
-          onImageUploaded={setUploadedImage}
+          onImageUploaded={handleImageUploaded}
           onProcessedImage={setProcessedImage}
-          onOCRResult={setOcrResult}
+          onOCRResult={handleOCRResult}
           onProcessingChange={setIsProcessing}
           onError={setError}
           onClear={handleClear}
           isProcessing={isProcessing}
           enhancementLevel={enhancementLevel}
           characterFocus={characterFocus}
+          hasOCRResults={ocrResult !== null}
+          onImageFileStored={handleImageFileStored}
+          isReprocessing={isReprocessing}
         />
 
         {/* Error Display */}
@@ -102,8 +174,9 @@ export default function Home() {
             processedImageUrl={processedImage}
             enhancementLevel={enhancementLevel}
             onClear={handleClear}
-            onOCRResult={setOcrResult}
+            onOCRResult={handleOCRResult}
             characterFocus={characterFocus}
+            isReprocessing={isReprocessing}
           />
         )}
 

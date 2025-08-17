@@ -1,4 +1,4 @@
-import { Settings, Contrast, Type } from "lucide-react";
+import { Settings, Contrast, Type, Loader2 } from "lucide-react";
 import { ImageEnhancementLevel, CharacterFocus } from "@/pages/home";
 import {
   Select,
@@ -13,6 +13,7 @@ interface EnhancementToolbarProps {
   onEnhancementLevelChange: (level: ImageEnhancementLevel) => void;
   characterFocus: CharacterFocus;
   onCharacterFocusChange: (focus: CharacterFocus) => void;
+  isReprocessing?: boolean;
 }
 
 export default function EnhancementToolbar({
@@ -20,6 +21,7 @@ export default function EnhancementToolbar({
   onEnhancementLevelChange,
   characterFocus,
   onCharacterFocusChange,
+  isReprocessing = false,
 }: EnhancementToolbarProps) {
   const enhancementOptions = [
     { value: "none", label: "None", description: "Original image" },
@@ -51,11 +53,17 @@ export default function EnhancementToolbar({
             <Settings className="w-4 h-4 text-primary-600 dark:text-primary-400" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center">
+              {isReprocessing && (
+                <Loader2 className="w-3 h-3 text-blue-500 mr-1 animate-spin" />
+              )}
               Image Enhancement
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Optimize text recognition for difficult images
+              {isReprocessing 
+                ? "Applying new settings..." 
+                : "Optimize text recognition for difficult images"
+              }
             </p>
           </div>
         </div>

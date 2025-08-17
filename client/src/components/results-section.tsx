@@ -1,4 +1,4 @@
-import { Archive, Copy, Download, Save, Trash2 } from "lucide-react";
+import { Archive, Copy, Download, Loader2, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import ImageViewer from "@/components/image-viewer";
 import { CropProcessingAnimation } from "@/components/loading-animations";
@@ -17,6 +17,7 @@ interface ResultsSectionProps {
   onClear: () => void;
   onOCRResult: (result: OCRResult) => void;
   characterFocus: CharacterFocus;
+  isReprocessing?: boolean;
 }
 
 export default function ResultsSection({
@@ -27,10 +28,19 @@ export default function ResultsSection({
   onClear,
   onOCRResult,
   characterFocus,
+  isReprocessing = false,
 }: ResultsSectionProps) {
   const { toast } = useToast();
   const { extractText } = useOCR();
-  const { savedTexts, saveText, deleteText, clearAll, updateTitle, exportTexts } = useSavedText();
+  const {
+    savedTexts,
+    saveText,
+    deleteText,
+    clearAll,
+    updateTitle,
+    exportTexts,
+    exportTextsAsText,
+  } = useSavedText();
   const [highlightedText, setHighlightedText] = useState(result.text);
   const [searchTerm, setSearchTerm] = useState("");
   const [matchCount, setMatchCount] = useState(0);
@@ -125,8 +135,11 @@ export default function ResultsSection({
     <section className="mb-8">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 sm:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-0">
-            Extracted Text
+          <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-0 flex items-center">
+            {isReprocessing && (
+              <Loader2 className="w-6 h-6 text-blue-500 mr-2 animate-spin" />
+            )}
+            {isReprocessing ? "Reprocessing Text..." : "Extracted Text"}
           </h3>
         </div>
 
@@ -197,9 +210,9 @@ export default function ResultsSection({
         {/* Extracted Text Results */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 mt-2">
               {searchTerm && matchCount > 0 && (
-                <span className="text-sm text-primary-600 dark:text-primary-400 font-medium">
+                <span className="text-lg text-primary-600 dark:text-primary-400 font-medium">
                   {matchCount} matches found
                 </span>
               )}
@@ -211,7 +224,7 @@ export default function ResultsSection({
 
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 border border-gray-200 dark:border-gray-600">
             <div
-              className="text-gray-900 dark:text-gray-100 leading-normal whitespace-pre font-mono text-sm overflow-x-auto"
+              className="text-gray-900 dark:text-gray-100 leading-normal whitespace-pre-wrap font-mono text-sm overflow-x-auto"
               dangerouslySetInnerHTML={{
                 __html: highlightedText || "No text found in the image.",
               }}
@@ -226,6 +239,7 @@ export default function ResultsSection({
           <button
             onClick={handleSaveText}
             className="inline-flex items-center px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white font-medium rounded-lg transition-colors duration-200"
+            title="Save this extracted text to local storage for later access"
           >
             <Save className="w-4 h-4 mr-2" />
             Save Text
@@ -234,6 +248,7 @@ export default function ResultsSection({
           <button
             onClick={handleShowSavedTexts}
             className="relative inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white font-medium rounded-lg transition-colors duration-200"
+            title="View and manage all your saved extracted texts"
           >
             <Archive className="w-4 h-4 mr-2" />
             Viewed saved texts ({savedTexts.length})
@@ -242,6 +257,7 @@ export default function ResultsSection({
           <button
             onClick={copyToClipboard}
             className="inline-flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors duration-200"
+            title="Copy the extracted text to your clipboard"
           >
             <Copy className="w-4 h-4 mr-2" />
             Copy Text
@@ -250,6 +266,7 @@ export default function ResultsSection({
           <button
             onClick={downloadText}
             className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200"
+            title="Download the extracted text as a .txt file"
           >
             <Download className="w-4 h-4 mr-2" />
             Download
@@ -258,9 +275,10 @@ export default function ResultsSection({
           <button
             onClick={onClear}
             className="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200"
+            title="Clear all results and start over with a new image"
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Clear
+            Reset All Results
           </button>
         </div>
       </div>
@@ -274,6 +292,7 @@ export default function ResultsSection({
           onClearAll={clearAll}
           onUpdateTitle={updateTitle}
           onExport={exportTexts}
+          onExportAsText={exportTextsAsText}
         />
       )}
     </section>

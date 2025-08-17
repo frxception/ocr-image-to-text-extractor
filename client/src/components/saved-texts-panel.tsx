@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, Download, Edit3, Search, Trash2, X } from "lucide-react";
+import { BarChart3, Calendar, Download, Edit3, FileText, Search, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import type { SavedTextEntry } from "@/hooks/use-saved-text";
 
@@ -9,6 +9,7 @@ interface SavedTextsPanelProps {
   onClearAll: () => void;
   onUpdateTitle: (id: string, title: string) => void;
   onExport: () => void;
+  onExportAsText: () => void;
 }
 
 export default function SavedTextsPanel({
@@ -18,6 +19,7 @@ export default function SavedTextsPanel({
   onClearAll,
   onUpdateTitle,
   onExport,
+  onExportAsText,
 }: SavedTextsPanelProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -85,14 +87,25 @@ export default function SavedTextsPanel({
               />
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button
                 onClick={onExport}
                 disabled={savedTexts.length === 0}
                 className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200"
+                title="Export as JSON file"
               >
                 <Download className="w-4 h-4 mr-2 inline" />
-                Export
+                Export JSON
+              </button>
+
+              <button
+                onClick={onExportAsText}
+                disabled={savedTexts.length === 0}
+                className="px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200"
+                title="Export as text file with preserved formatting"
+              >
+                <FileText className="w-4 h-4 mr-2 inline" />
+                Export Text
               </button>
 
               <button
@@ -196,7 +209,7 @@ export default function SavedTextsPanel({
 
                   {/* Text Preview */}
                   <div className="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-600">
-                    <div className="text-sm text-gray-900 dark:text-gray-100 font-mono leading-relaxed max-h-24 overflow-y-auto">
+                    <div className="text-sm text-gray-900 dark:text-gray-100 font-mono leading-relaxed max-h-24 overflow-y-auto whitespace-pre-wrap">
                       {entry.text.length > 200
                         ? `${entry.text.substring(0, 200)}...`
                         : entry.text || "No text extracted"}

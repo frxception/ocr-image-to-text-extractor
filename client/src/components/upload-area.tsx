@@ -1,19 +1,21 @@
-import { useCallback, useState } from "react";
-import { useDropzone } from "react-dropzone";
 import {
-  CloudUpload,
-  FolderOpen,
-  X,
-  Loader2,
-  CheckCircle,
   AlertCircle,
-  Crop,
   Check,
+  CheckCircle,
+  ChevronDown,
+  ChevronUp,
+  CloudUpload,
+  Crop,
+  FolderOpen,
+  Loader2,
+  X,
 } from "lucide-react";
-import { useOCR } from "@/hooks/use-ocr";
-import { OCRResult, ImageEnhancementLevel, CharacterFocus } from "@/pages/home";
+import { useCallback, useEffect, useState } from "react";
+import { useDropzone } from "react-dropzone";
 import ImageViewer from "@/components/image-viewer";
 import { ProcessingAnimation, UploadAnimation } from "@/components/loading-animations";
+import { useOCR } from "@/hooks/use-ocr";
+import type { CharacterFocus, ImageEnhancementLevel, OCRResult } from "@/pages/home";
 
 interface UploadAreaProps {
   uploadedImage: string | null;
@@ -26,6 +28,9 @@ interface UploadAreaProps {
   isProcessing: boolean;
   enhancementLevel: ImageEnhancementLevel;
   characterFocus: CharacterFocus;
+  hasOCRResults?: boolean;
+  onImageFileStored?: (file: File) => void;
+  isReprocessing?: boolean;
 }
 
 export default function UploadArea({
@@ -39,19 +44,36 @@ export default function UploadArea({
   isProcessing,
   enhancementLevel,
   characterFocus,
+  hasOCRResults = false,
+  onImageFileStored,
+  isReprocessing = false,
 }: UploadAreaProps) {
   const [progress, setProgress] = useState(0);
   const [processingStage, setProcessingStage] = useState<string>("");
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [cropPreviewUrl, setCropPreviewUrl] = useState<string | null>(null);
+  const [isImageCollapsed, setIsImageCollapsed] = useState(false);
   const { extractText } = useOCR();
+
+  // Automatically collapse the image accordion when OCR results are available
+  useEffect(() => {
+    if (hasOCRResults) {
+      setIsImageCollapsed(true);
+    } else {
+      // Reset to expanded when no OCR results (new image or cleared)
+      setIsImageCollapsed(false);
+    }
+  }, [hasOCRResults]);
 
   const processImage = useCallback(
     async (file: File) => {
       try {
         onProcessingChange(true);
         setProgress(0);
+
+        // Store the original file for potential reprocessing
+        onImageFileStored?.(file);
 
         // Create image URL for preview
         const imageUrl = URL.createObjectURL(file);
@@ -160,7 +182,7 @@ export default function UploadArea({
     <section className="mb-8">
       <div
         {...getRootProps()}
-        className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-dashed p-8 sm:p-12 text-center transition-all duration-300 cursor-pointer
+        className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border-2 border-dashed p-4 sm:p-6 text-center transition-all duration-300 cursor-pointer
           ${
             isDragActive
               ? "border-primary-500 bg-primary-50 dark:bg-primary-900/20"
@@ -170,39 +192,68 @@ export default function UploadArea({
       >
         <input {...getInputProps()} />
 
-        {uploadedImage && !isProcessing ? (
-          // Show uploaded image with delete button
+        {uploadedImage && !isProcessing && !isReprocessing ? (
+          // Show uploaded image with accordion toggle
           <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onClear();
-              }}
-              className="absolute top-2 right-2 z-10 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors duration-200"
-              title="Remove image"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="mb-4">
-              <img
-                src={uploadedImage}
-                alt="Uploaded image"
-                className="max-w-full h-auto rounded-lg shadow-md max-h-64 mx-auto"
-              />
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Image Ready</h3>
+              <div className="flex items-center gap-2">
+                {hasOCRResults && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsImageCollapsed(!isImageCollapsed);
+                    }}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
+                    title={isImageCollapsed ? "Show image" : "Hide image"}
+                  >
+                    {isImageCollapsed ? (
+                      <ChevronDown className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    ) : (
+                      <ChevronUp className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    )}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClear();
+                  }}
+                  className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
+                  title="Remove image"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Image Ready
-            </h3>
+
+            {!isImageCollapsed && (
+              <div className="mb-4">
+                <img
+                  src={uploadedImage}
+                  alt="Uploaded image"
+                  className="max-w-full h-auto rounded-lg shadow-md max-h-64 mx-auto"
+                />
+              </div>
+            )}
+
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Click or drop a new image to replace
+              {isImageCollapsed
+                ? "Image hidden - click to expand or drop a new image to replace"
+                : "Click or drop a new image to replace"}
             </p>
           </div>
-        ) : !isProcessing ? (
+        ) : !isProcessing && !isReprocessing ? (
           // Show upload prompt with animation
           <UploadAnimation />
         ) : (
           // Show processing state with animated loading
-          <ProcessingAnimation stage={processingStage || "processing image"} progress={progress} />
+          <ProcessingAnimation 
+            stage={isReprocessing ? "Reprocessing with new settings..." : (processingStage || "processing image")} 
+            progress={isReprocessing ? 50 : progress} 
+          />
         )}
       </div>
 
@@ -233,6 +284,7 @@ export default function UploadArea({
                 <button
                   onClick={handleCancelCrop}
                   className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200"
+                  title="Cancel crop operation and return to image selection"
                 >
                   <X className="w-4 h-4 mr-2 inline" />
                   Cancel
@@ -240,6 +292,7 @@ export default function UploadArea({
                 <button
                   onClick={handleSkipCrop}
                   className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200"
+                  title="Process the entire image without cropping"
                 >
                   <Check className="w-4 h-4 mr-2 inline" />
                   Skip Crop
@@ -252,6 +305,7 @@ export default function UploadArea({
                     );
                   }}
                   className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-lg transition-colors duration-200"
+                  title="Get instructions on how to use the crop tool"
                 >
                   <Crop className="w-4 h-4 mr-2 inline" />
                   How to Crop

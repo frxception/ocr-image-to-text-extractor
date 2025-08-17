@@ -93,6 +93,52 @@ export function useSavedText() {
     URL.revokeObjectURL(url);
   }, [savedTexts]);
 
+  const exportTextsAsText = useCallback(() => {
+    if (savedTexts.length === 0) return;
+
+    // Create a formatted text file with all extracted texts
+    const textContent = savedTexts
+      .map((entry) => {
+        const separator = "=".repeat(80);
+        const header = `${entry.title || "Untitled"}`;
+        const metadata = `Date: ${entry.timestamp.toLocaleString()}
+Confidence: ${Math.round(entry.confidence)}%
+Words: ${entry.words} | Characters: ${entry.characters} | Lines: ${entry.lines}`;
+        
+        return `${separator}
+${header}
+${separator}
+${metadata}
+
+${entry.text}
+
+`;
+      })
+      .join("\n");
+
+    // Add file header
+    const fileHeader = `OCR Extracted Texts Export
+Generated on: ${new Date().toLocaleString()}
+Total entries: ${savedTexts.length}
+
+`;
+
+    const fullContent = fileHeader + textContent;
+
+    const blob = new Blob([fullContent], {
+      type: "text/plain",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ocr-extracted-texts-${new Date().toISOString().split("T")[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [savedTexts]);
+
   return {
     savedTexts,
     saveText,
@@ -100,6 +146,7 @@ export function useSavedText() {
     clearAll,
     updateTitle,
     exportTexts,
+    exportTextsAsText,
     count: savedTexts.length,
   };
 }
