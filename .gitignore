@@ -7,3 +7,10 @@ vite.config.ts.*
 
 .idea
 .vscode
+.replit
+replit.md
+.claude
+CLAUDE.md
+.local
+
+.env
