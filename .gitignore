@@ -9,8 +9,8 @@ vite.config.ts.*
 .vscode
 .replit
 replit.md
-.claude
-CLAUDE.md
+.cl*
+CL*
 .local
 
 .env
